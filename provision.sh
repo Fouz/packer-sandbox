@@ -1,21 +1,44 @@
 #!/bin/bash
 
-BOLD="$(tput bold 2>/dev/null || echo '')"
-GREY="$(tput setaf 0 2>/dev/null || echo '')"
-RED="$(tput setaf 1 2>/dev/null || echo '')"
-GREEN="$(tput setaf 2 2>/dev/null || echo '')"
-YELLOW="$(tput setaf 3 2>/dev/null || echo '')"
-BLUE="$(tput setaf 4 2>/dev/null || echo '')"
-MAGENTA="$(tput setaf 5 2>/dev/null || echo '')"
-CYAN="$(tput setaf 6 2>/dev/null || echo '')"
-RESET="$(tput sgr0 2>/dev/null || echo '')"
+# Reset
+Reset='\033[0m'       # Text Reset
 
-title() {
-  printf "${BOLD}${YELLOW}>${RESET} $@\n"
+# Regular Colors
+Black='\033[0;30m'        # Black
+Red='\033[0;31m'          # Red
+Green='\033[0;32m'        # Green
+Yellow='\033[0;33m'       # Yellow
+Blue='\033[0;34m'         # Blue
+Purple='\033[0;35m'       # Purple
+Cyan='\033[0;36m'         # Cyan
+White='\033[0;37m'        # White
+
+# Bold
+BBlack='\033[1;30m'       # Black
+BRed='\033[1;31m'         # Red
+BGreen='\033[1;32m'       # Green
+BYellow='\033[1;33m'      # Yellow
+BBlue='\033[1;34m'        # Blue
+BPurple='\033[1;35m'      # Purple
+BCyan='\033[1;36m'        # Cyan
+BWhite='\033[1;37m'       # White
+
+# Underline
+UBlack='\033[4;30m'       # Black
+URed='\033[4;31m'         # Red
+UGreen='\033[4;32m'       # Green
+UYellow='\033[4;33m'      # Yellow
+UBlue='\033[4;34m'        # Blue
+UPurple='\033[4;35m'      # Purple
+UCyan='\033[4;36m'        # Cyan
+UWhite='\033[4;37m'       # White
+
+function title {
+  printf "\n\n${BCyan}  ***${UYellow} $@ ${BCyan}***${Reset}\n\n"
 }
 
-info() {
-  printf "${BOLD}${BLUE}>${RESET} $@\n"
+function info {
+  printf "\n\n${BBlue}  ***${BCyan} $@ ${BBlue}***${Reset}\n\n"
 }
 
 title "Provision"
@@ -28,9 +51,9 @@ info "Install basic tools and sources"
 sudo apt install -y gnupg curl git make unzip apt-transport-https bash-completion
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3EFE0E0A2F2F60AA
 echo "deb http://ppa.launchpad.net/tektoncd/cli/ubuntu eoan main" | sudo tee /etc/apt/sources.list.d/tektoncd-ubuntu-cli.list
-curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+curl -Ls https://baltocdn.com/helm/signing.asc | sudo apt-key add -
 echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
-sudo add-apt-repository ppa:jonathonf/vim
+sudo add-apt-repository -y ppa:jonathonf/vim
 sudo apt update -y
 
 info "Install jq and k8s tools"
@@ -44,6 +67,10 @@ info "Install docker in experimental mode"
 sudo curl -sL get.docker.com | sh
 sudo usermod -aG docker ubuntu
 sudo docker pull rancher/k3d-proxy
+sudo chmod a+rwx /etc
+sudo chmod a+rwx /etc/docker
+touch /etc/docker/daemon.json
+sudo chmod a+rwx /etc/docker/daemon.json
 cat <<EOF >> /etc/docker/daemon.json
 {
   "experimental": true
@@ -55,9 +82,9 @@ curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash
 curl -LOs https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
 chmod a+rx kubectl
 sudo mv kubectl /usr/local/bin
-echo 'source <(kubectl completion bash)' >>~/.bashrc
-kubectl completion bash >/etc/bash_completion.d/kubectl
-
+echo 'source <(kubectl completion bash)' >> ~/.bashrc
+sudo kubectl completion bash > /etc/bash_completion.d/kubectl
+chmod a+rw /etc/bash_completion.d/kubectl
 
 info "Install node.js"
 curl -sL install-node.now.sh/lts | sudo bash -s -- -f
@@ -77,8 +104,9 @@ autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 EOF
 
 info "Create aliases"
+echo 'alias v=vault' > /home/ubuntu/.bash_aliases
 echo 'alias k=kubectl' > /home/ubuntu/.bash_aliases
-echo 'alias kk=kubectl krew' >> /home/ubuntu/.bash_aliases
+echo 'alias kk=krew' >> /home/ubuntu/.bash_aliases
 echo 'alias t=tkn' >> /home/ubuntu/.bash_aliases
 echo "alias ll='ls -gAlFh'" >> /home/ubuntu/.bash_aliases
 echo "source /home/ubuntu/.bash_aliases" >> .bashrc
@@ -108,5 +136,5 @@ cd /home/ubuntu
 mkdir -p git
 cd git
 git clone https://github.com/KnowledgeHut-AWS/k8s-sandbox
-
+rm -f provision.sh
 title "done"

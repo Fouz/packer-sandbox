@@ -22,4 +22,4 @@ exec:
 	docker exec -it $$(basename $$PWD) bash || true
 
 build:
-	packer build packer.json
+	packer build packer.json | tee output.log
