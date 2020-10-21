@@ -103,13 +103,14 @@ au! BufNewFile,BufReadPost *.{yaml,yml} set filetype=yaml foldmethod=indent
 autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 EOF
 
-info "Create aliases"
+info "Create aliases etc."
 echo 'alias v=vault' > /home/ubuntu/.bash_aliases
 echo 'alias k=kubectl' > /home/ubuntu/.bash_aliases
-echo 'alias kk=krew' >> /home/ubuntu/.bash_aliases
+echo 'alias kk=kubectl krew' >> /home/ubuntu/.bash_aliases
 echo 'alias t=tkn' >> /home/ubuntu/.bash_aliases
 echo "alias ll='ls -gAlFh'" >> /home/ubuntu/.bash_aliases
 echo "source /home/ubuntu/.bash_aliases" >> .bashrc
+echo "export EDITOR=vim" >> .bashrc
 
 info "Install Krew"
 tmp=$(mktemp -d)
@@ -120,6 +121,7 @@ tar zxf krew.tar.gz
 cd /home/ubuntu
 rm -rf $tmp
 PATH=$PATH:/home/ubuntu/.krew/bin
+echo "PATH=$PATH:/home/ubuntu/.krew/bin" >> ~/.bashrc
 
 info "Install vault client"
 curl -sO https://releases.hashicorp.com/vault/1.5.4/vault_1.5.4_linux_amd64.zip
